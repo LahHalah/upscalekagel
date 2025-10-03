@@ -1,7 +1,7 @@
 # =========================================================================
 # Skrip Utama - Peningkat Gambar dan Restorasi Wajah
-# Perbaikan: Menyederhanakan impor, meningkatkan penanganan error, 
-#            mengoptimalkan penggunaan memori, dan memperbaiki sintaksis CSS Gradio.
+# Perubahan: Mengembalikan semua model upscaler yang dihapus.
+#            Default upscaler_half_checkbox diubah ke False.
 # =========================================================================
 
 # --- Bagian 1: Impor Pustaka yang Diperlukan ---
@@ -12,8 +12,8 @@ import subprocess
 import datetime
 import hashlib
 import base64
-import requests # Ditambahkan karena digunakan dalam download_model
-import torch # Ditambahkan karena digunakan untuk cl_device
+import requests
+import torch
 from io import BytesIO
 from PIL import Image
 from typing import Optional
@@ -33,7 +33,6 @@ try:
         process_face_restoration,
     )
 except ImportError:
-    # Biarkan proses __main__ yang menangani, tapi tambahkan peringatan
     print("Peringatan: Pustaka 'stablepy' mungkin hilang. Instalasi diperlukan.")
     pass
 
@@ -55,8 +54,6 @@ def generate_key_from_password(password: str, salt: bytes, iterations: int = 100
     """
     Menghasilkan kunci enkripsi 32-byte dari kata sandi dan salt menggunakan PBKDF2.
     """
-    # Menggunakan hashlib bawaan Python untuk PBKDF2 yang aman
-    # Kunci harus 32 byte untuk AES-256
     kdf = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, iterations)
     return kdf
 
@@ -175,14 +172,31 @@ def downscale_image_by_factor(image: Image.Image, scale_factor: float, min_dim: 
     progress(1, desc="Downscaling selesai.")
     return downscaled_img
 
-# Kamus model upscaler
+# KAMUS MODEL UPSCALER DIKEMBALIKAN KE VERSI ASLI
 UPSCALER_DICT_GUI = {
     **{bu: bu for bu in BUILTIN_UPSCALERS if bu not in ["None", None]},
+    "4xNomosWebPhoto_RealPLKSR": "https://github.com/Phhofm/models/releases/download/4xNomosWebPhoto_esrgan/4xNomosWebPhoto_esrgan.pth",
+    "4xNomosWebPhoto_esrgan": "https://github.com/Phhofm/models/releases/download/4xNomosWebPhoto_esrgan/4xNomosWebPhoto_esrgan.pth",
+    "4xRealWebPhoto_v4_dat2": "https://github.com/Phhofm/models/releases/download/4xRealWebPhoto_v4_dat2/4xRealWebPhoto_v4_dat2.pth",
     "RealESRNet_x4plus": "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.1/RealESRNet_x4plus.pth",
     "4x-UltraSharp": "https://huggingface.co/Shandypur/ESRGAN-4x-UltraSharp/resolve/main/4x-UltraSharp.pth",
+    "8x_NMKD-Superscale_150000_G": "https://huggingface.co/uwg/upscaler/resolve/main/ESRGAN/8x_NMKD-Superscale_150000_G.pth",
+    "4x_NMKD-Siax_200k": "https://huggingface.co/uwg/upscaler/resolve/main/ESRGAN/4x_NMKD-Siax_200k.pth",
+    "4x_NMKD-Superscale-SP_178000_G": "https://huggingface.co/gemasai/4x_NMKD-Superscale-SP_178000_G/resolve/main/4x_NMKD-Superscale-SP_178000_G.pth",
     "4x_foolhardy_Remacri": "https://huggingface.co/FacehugmanIII/4x_foolhardy_Remacri/resolve/main/4x_foolhardy_Remacri.pth",
-    "4xPurePhoto-RealPLSKR": "https://github.com/starinspace/StarinspaceUpscale/releases/download/Models/4xPurePhoto-RealPLSKR.pth",
+    "1xDeJPG_realplksr_otf": "https://github.com/Phhofm/models/releases/download/1xDeJPG_realplksr_otf/1xDeJPG_realplksr_otf.pth",
+    "4xPurePhoto-RealPLSKR.pth": "https://github.com/starinspace/StarinspaceUpscale/releases/download/Models/4xPurePhoto-RealPLSKR.pth",
+    "Remacri4xExtraSmoother": "https://huggingface.co/hollowstrawberry/upscalers-backup/resolve/main/ESRGAN/Remacri%204x%20ExtraSmoother.pth",
+    "AnimeSharp4x": "https://huggingface.co/hollowstrawberry/upscalers-backup/resolve/main/ESRGAN/AnimeSharp%204x.pth",
+    "lollypop": "https://huggingface.co/hollowstrawberry/upscalers-backup/resolve/main/ESRGAN/lollypop.pth",
+    "RealisticRescaler4x": "https://huggingface.co/hollowstrawberry/upscalers-backup/resolve/main/ESRGAN/RealisticRescaler%204x.pth",
+    "NickelbackFS4x": "https://huggingface.co/hollowstrawberry/upscalers-backup/resolve/main/ESRGAN/NickelbackFS%204x.pth",
+    "Valar4x": "https://huggingface.co/halffried/gyre_upscalers/resolve/main/esrgan_valar_x4/4x_Valar_v1.pth",
+    "HAT_GAN_SRx4": "https://huggingface.co/halffried/gyre_upscalers/resolve/main/hat_ganx4/Real_HAT_GAN_SRx4.safetensors",
     "HAT-L_SRx4": "https://huggingface.co/halffried/gyre_upscalers/resolve/main/hat_lx4/HAT-L_SRx4_ImageNet-pretrain.safetensors",
+    "Ghibli_Grain": "https://huggingface.co/anonderpling/upscalers/resolve/main/ESRGAN/ghibli_grain.pth",
+    "Detoon4x": "https://huggingface.co/anonderpling/upscalers/resolve/main/ESRGAN/4x_detoon_225k.pth",
+    "4xRealWebPhoto_v4_dat2_dup": "https://github.com/Phhofm/models/releases/download/4xRealWebPhoto_v4_dat2/4xRealWebPhoto_v4_dat2.pth", # Duplikat dipertahankan dengan nama unik
 }
 
 # Direktori model lokal
@@ -232,6 +246,9 @@ global_current_upscaler_path = None
 global_current_face_restorer_name = None
 global_current_upscaler_config = {}
 
+# Perangkat untuk pemrosesan (diinisialisasi ulang di Bagian 3)
+cl_device = "cuda" if torch.cuda.is_available() else "cpu"
+
 def load_models_cached(face_restoration_type, upscaler_name_key, upscaler_tile, upscaler_tile_overlap, upscaler_half, progress=gr.Progress()):
     """Memuat model dengan caching dan penanganan unduhan."""
     global global_face_restoration_model, global_upscaler_model_instance, \
@@ -266,12 +283,13 @@ def load_models_cached(face_restoration_type, upscaler_name_key, upscaler_tile, 
         target_upscaler_path = download_model(target_upscaler_path, directory_upscalers, progress=progress)
         progress(0.6, desc=f"Model upscaler {os.path.basename(target_upscaler_path)} tersedia.")
 
+    # Catatan: Kita tetap memasukkan upscaler_half dalam konfigurasi untuk caching
     current_upscaler_params_for_load = {
         'model': target_upscaler_path,
         'device': cl_device,
         'tile': upscaler_tile,
         'tile_overlap': upscaler_tile_overlap,
-        'half': upscaler_half if cl_device == "cuda" else False
+        'half': upscaler_half # Gunakan nilai dari input (default False)
     }
 
     if (global_upscaler_model_instance is None or
@@ -312,6 +330,7 @@ def process_and_encrypt(
         raise gr.Error("Mohon unggah gambar.")
 
     if cl_device == "cpu" and upscaler_half:
+        # Jika pengguna mencoba menggunakan Half-Precision di CPU, nonaktifkan dan beri peringatan
         upscaler_half = False
         gr.Warning("Upscaler Presisi Setengah dinonaktifkan untuk CPU.")
     
@@ -504,10 +523,11 @@ with gr.Blocks(css=".download-link {text-decoration: none;}") as demo:
             with gr.Accordion("Pengaturan Lanjutan (Tiling & Presisi)", open=False):
                 upscaler_tile_slider = gr.Slider(minimum=0, maximum=512, step=16, label="Ukuran Tile Upscaler (0=nonaktif)", value=192)
                 upscaler_tile_overlap_slider = gr.Slider(minimum=0, maximum=48, step=1, label="Tumpang Tindih Tile Upscaler", value=8)
+                # PERUBAHAN: Default upscaler_half diubah menjadi False
                 upscaler_half_checkbox = gr.Checkbox(
                     label="Upscaler Presisi Setengah (Mempercepat di GPU, dapat mengurangi memori)", 
-                    value=cl_device == "cuda", 
-                    interactive=cl_device == "cuda"
+                    value=False, # Diubah dari cl_device == "cuda"
+                    interactive=cl_device == "cuda" # Interaktif hanya di CUDA
                 )
                 
             face_restoration_dropdown = gr.Dropdown(
@@ -579,7 +599,6 @@ with gr.Blocks(css=".download-link {text-decoration: none;}") as demo:
 # --- Bagian 5: Luncurkan Aplikasi Gradio ---
 if __name__ == "__main__":
     try:
-        # Verifikasi impor penting sebelum peluncuran
         from Crypto.Cipher import AES
         import requests
     except ImportError as e:
@@ -592,7 +611,6 @@ if __name__ == "__main__":
             print(f"Gagal menginstal dependensi: {install_e}")
             sys.exit(1)
     
-    # Inisialisasi awal dimensi display saat peluncuran
     with demo:
         dim_display_textbox.value = update_dimensions_display(None, downscale_factor_slider.value)
         
