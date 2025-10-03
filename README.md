@@ -17,8 +17,8 @@ Aplikasi ini memerlukan Python 3.8+ dan beberapa pustaka utama.
 ### 1\. Klon Repositori
 
 ```bash
-git clone https://github.com/LahHalah/upscalekagel
-cd upscalekagel
+!git clone https://github.com/LahHalah/upscalekagel
+%cd upscalekagel
 ```
 
 ### 2\. Instalasi Dependensi
