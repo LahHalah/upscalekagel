@@ -1,7 +1,3 @@
-Tentu, ini adalah draf `README.md` yang lengkap dan profesional untuk repositori GitHub aplikasi Peningkat Gambar dan Restorasi Wajah yang sangat aman, mencakup fitur utama, fokus keamanan, dan instruksi penggunaan.
-
------
-
 # 🛡️ Secure Image Upscaler & Face Restorer (StablePy-AES)
 
 Aplikasi Gradio ini menyediakan solusi peningkatan gambar (upscaling) dan restorasi wajah (face restoration) yang didukung oleh pustaka `StablePy` dan dilengkapi dengan lapisan keamanan tingkat lanjut. **Semua output gambar disimpan di disk hanya dalam format terenkripsi (AES-256 GCM) dan hanya dapat diakses melalui dekripsi *on-the-fly* di memori.**
