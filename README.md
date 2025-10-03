@@ -2,6 +2,10 @@
 
 Aplikasi Gradio ini menyediakan solusi peningkatan gambar (upscaling) dan restorasi wajah (face restoration) yang didukung oleh pustaka `StablePy` dan dilengkapi dengan lapisan keamanan tingkat lanjut. **Semua output gambar disimpan di disk hanya dalam format terenkripsi (AES-256 GCM) dan hanya dapat diakses melalui dekripsi *on-the-fly* di memori.**
 
+# Credit
+
+github/R3gm
+
 ## ✨ Fitur Utama
 
   * **Peningkatan Kualitas Gambar (Upscaling):** Mendukung berbagai model canggih seperti **RealESRNet**, **4x-UltraSharp**, **HAT-L\_SRx4**, dan lainnya, menggunakan pustaka `StablePy`.
